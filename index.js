@@ -12,6 +12,8 @@ app.use(cors());
 connectDB();
 require('./config/passport')(passport);
 app.use(passport.initialize());
+app.use('/uploads', express.static('uploads'));
+
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/complaint', complaintRoutes);

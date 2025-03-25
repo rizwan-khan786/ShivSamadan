@@ -8,49 +8,49 @@ const complaintAssignedTemplate = require('../utils/complaintAssigned'); // ✅ 
 const mongoose = require('mongoose'); // ✅ Import mongoose
 const User = require('../models/User'); // ✅ Import User model
 
-exports.submitComplaint = async (req, res) => {
-    try {
-        const { name, mobileNo, address, emailid, village, taluka, district, problem } = req.body;
+// exports.submitComplaint = async (req, res) => {
+//     try {
+//         const { name, mobileNo, address, emailid, village, taluka, district, problem } = req.body;
 
-        if (!req.user) {
-            return res.status(401).json({ error: "Unauthorized: No user found" });
-        }
+//         if (!req.user) {
+//             return res.status(401).json({ error: "Unauthorized: No user found" });
+//         }
 
-        if (!name || !mobileNo || !problem || !emailid) {
-            return res.status(400).json({ error: "Required fields are missing" });
-        }
+//         if (!name || !mobileNo || !problem || !emailid) {
+//             return res.status(400).json({ error: "Required fields are missing" });
+//         }
 
-        const attachments = req.files ? req.files.map(file => file.path) : [];
+//         const attachments = req.files ? req.files.map(file => file.path) : [];
 
-        const newComplaint = new Complaint({
-            user: req.user._id,
-            name,
-            mobileNo,
-            address,
-            emailid,
-            village,
-            taluka,
-            district,
-            problem,
-            attachments,
-            status: 'Pending'
-        });
+//         const newComplaint = new Complaint({
+//             user: req.user._id,
+//             name,
+//             mobileNo,
+//             address,
+//             emailid,
+//             village,
+//             taluka,
+//             district,
+//             problem,
+//             attachments,
+//             status: 'Pending'
+//         });
 
-        await newComplaint.save();
+//         await newComplaint.save();
 
-        // ✅ Send Email with Template
-        await sendEmail(
-            emailid,
-            `Complaint Submitted: ${newComplaint.complaintId}`,
-            `Your complaint has been submitted successfully. Complaint ID: ${newComplaint.complaintId}. Status: Pending.`,
-            complaintSubmittedTemplate(name, newComplaint.complaintId, problem) // ✅ HTML Template
-        );
+//         // ✅ Send Email with Template
+//         await sendEmail(
+//             emailid,
+//             `Complaint Submitted: ${newComplaint.complaintId}`,
+//             `Your complaint has been submitted successfully. Complaint ID: ${newComplaint.complaintId}. Status: Pending.`,
+//             complaintSubmittedTemplate(name, newComplaint.complaintId, problem) // ✅ HTML Template
+//         );
 
-        res.json({ message: "Complaint submitted successfully", complaintId: newComplaint.complaintId });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
+//         res.json({ message: "Complaint submitted successfully", complaintId: newComplaint.complaintId });
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// };
 
 // exports.submitComplaint = async (req, res) => {
 //     try {
@@ -116,6 +116,67 @@ exports.submitComplaint = async (req, res) => {
 
 
 // ✅ Get All Complaints for Logged-in User
+
+exports.submitComplaint = async (req, res) => {
+    try {
+        const { name, mobileNo, address, emailid, village, taluka, district, problem } = req.body;
+
+        if (!req.user) {
+            return res.status(401).json({ error: "Unauthorized: No user found" });
+        }
+
+        // ✅ Collect missing fields
+        const missingFields = [];
+        if (!name) missingFields.push("name");
+        if (!mobileNo) missingFields.push("mobileNo");
+        if (!problem) missingFields.push("problem");
+        if (!emailid) missingFields.push("emailid");
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({ 
+                error: "Required fields are missing", 
+                missingFields 
+            });
+        }
+
+        // ✅ Handle attachments (image files)
+        const attachments = req.files && req.files.length > 0 ? req.files.map(file => file.path) : [];
+
+        const newComplaint = new Complaint({
+            user: req.user._id,
+            name,
+            mobileNo,
+            address,
+            emailid,
+            village,
+            taluka,
+            district,
+            problem,
+            attachments,
+            status: 'Pending'
+        });
+
+        await newComplaint.save();
+
+        // ✅ Send Email with Template
+        await sendEmail(
+            emailid,
+            `Complaint Submitted: ${newComplaint._id}`,
+            `Your complaint has been submitted successfully. Complaint ID: ${newComplaint._id}. Status: Pending.`,
+            complaintSubmittedTemplate(name, newComplaint._id, problem) // ✅ HTML Template
+        );
+
+        res.json({ 
+            message: "Complaint submitted successfully", 
+            complaintId: newComplaint._id, 
+            attachments 
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+
 exports.getUserComplaints = async (req, res) => {
     try {
         const complaints = await Complaint.find({ user: req.user._id }).sort({ createdAt: -1 });

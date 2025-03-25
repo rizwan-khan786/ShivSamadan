@@ -5,11 +5,12 @@ const { submitComplaint, getUserComplaints, getComplaintById, updateComplaintSta
     getDepartmentComplaints
 } = require('../controllers/complaintController');
 const passport = require('passport');
+const upload = require('../middlewares/upload'); // Import multer config
 
 const router = express.Router();
 
 // ✅ User Routes
-router.post('/submit', passport.authenticate('jwt', { session: false }), submitComplaint); // User submits a complaint
+router.post('/submit', upload.array('attachments', 5), passport.authenticate('jwt', { session: false }), submitComplaint); // User submits a complaint
 router.get('/my-complaints', passport.authenticate('jwt', { session: false }), getUserComplaints); // Get complaints of logged-in user
 router.get('/:id', passport.authenticate('jwt', { session: false }), getComplaintById); // Get single complaint details
 
