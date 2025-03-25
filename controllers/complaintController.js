@@ -8,6 +8,50 @@ const complaintAssignedTemplate = require('../utils/complaintAssigned'); // ✅ 
 const mongoose = require('mongoose'); // ✅ Import mongoose
 const User = require('../models/User'); // ✅ Import User model
 
+// exports.submitComplaint = async (req, res) => {
+//     try {
+//         const { name, mobileNo, address, emailid, village, taluka, district, problem } = req.body;
+
+//         if (!req.user) {
+//             return res.status(401).json({ error: "Unauthorized: No user found" });
+//         }
+
+//         if (!name || !mobileNo || !problem || !emailid) {
+//             return res.status(400).json({ error: "Required fields are missing" });
+//         }
+
+//         const attachments = req.files ? req.files.map(file => file.path) : [];
+
+//         const newComplaint = new Complaint({
+//             user: req.user._id,
+//             name,
+//             mobileNo,
+//             address,
+//             emailid,
+//             village,
+//             taluka,
+//             district,
+//             problem,
+//             attachments,
+//             status: 'Pending'
+//         });
+
+//         await newComplaint.save();
+
+//         // ✅ Send Email with Template
+//         await sendEmail(
+//             emailid,
+//             `Complaint Submitted: ${newComplaint.complaintId}`,
+//             `Your complaint has been submitted successfully. Complaint ID: ${newComplaint.complaintId}. Status: Pending.`,
+//             complaintSubmittedTemplate(name, newComplaint.complaintId, problem) // ✅ HTML Template
+//         );
+
+//         res.json({ message: "Complaint submitted successfully", complaintId: newComplaint.complaintId });
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// };
+
 exports.submitComplaint = async (req, res) => {
     try {
         const { name, mobileNo, address, emailid, village, taluka, district, problem } = req.body;
@@ -16,8 +60,26 @@ exports.submitComplaint = async (req, res) => {
             return res.status(401).json({ error: "Unauthorized: No user found" });
         }
 
-        if (!name || !mobileNo || !problem || !emailid) {
-            return res.status(400).json({ error: "Required fields are missing" });
+        // ✅ Collect missing fields
+        const missingFields = [];
+        if (!name) missingFields.push("name");
+        if (!mobileNo) missingFields.push("mobileNo");
+        if (!problem) missingFields.push("problem");
+        if (!emailid) missingFields.push("emailid");
+        if (!village) missingFields.push("village");
+        if (!taluka) missingFields.push("taluka");
+        if (!district) missingFields.push("district");
+        if (!problem) missingFields.push("problem");
+        if (!attachments) missingFields.push("attachments");
+
+
+
+        // ✅ If any required fields are missing, return an error
+        if (missingFields.length > 0) {
+            return res.status(400).json({ 
+                error: "Required fields are missing", 
+                missingFields 
+            });
         }
 
         const attachments = req.files ? req.files.map(file => file.path) : [];
