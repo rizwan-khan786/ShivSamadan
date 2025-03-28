@@ -46,12 +46,31 @@ const ComplaintSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // ✅ Pre-save hook to generate Complaint ID
+// ComplaintSchema.pre('save', async function (next) {
+//     if (!this.complaintId) {
+//         const count = await mongoose.model('Complaint').countDocuments() + 1;
+//         this.complaintId = `CMP${new Date().getFullYear()}${String(count).padStart(6, '0')}`;
+//     }
+//     next();
+// });
+
 ComplaintSchema.pre('save', async function (next) {
     if (!this.complaintId) {
         const count = await mongoose.model('Complaint').countDocuments() + 1;
-        this.complaintId = `CMP${new Date().getFullYear()}${String(count).padStart(6, '0')}`;
+        const now = new Date();
+
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Month (01-12)
+        const day = String(now.getDate()).padStart(2, '0'); // Day (01-31)
+        const hours = String(now.getHours()).padStart(2, '0'); // Hours (00-23)
+        const minutes = String(now.getMinutes()).padStart(2, '0'); // Minutes (00-59)
+        const seconds = String(now.getSeconds()).padStart(2, '0'); // Seconds (00-59)
+        const milliseconds = String(now.getMilliseconds()).padStart(3, '0'); // Milliseconds (000-999)
+
+        this.complaintId = `CMP${year}${month}${day}${hours}${minutes}${seconds}${milliseconds}${String(count).padStart(6, '0')}`;
     }
     next();
 });
+
 
 module.exports = mongoose.model('Complaint', ComplaintSchema);
