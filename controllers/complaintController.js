@@ -247,6 +247,7 @@ exports.updateComplaintStatus = async (req, res) => {
 };
 
 
+
 // exports.assignComplaintToDepartment = async (req, res) => {
 //     try {
 //         if (req.user.role !== 'Admin') {
@@ -277,7 +278,18 @@ exports.updateComplaintStatus = async (req, res) => {
 //             department.emailid, // 📩 Department Email
 //             `New Complaint Assigned: ${complaint.complaintId}`,
 //             `A new complaint (ID: ${complaint.complaintId}) has been assigned to your department.`,
-//             complaintAssignedTemplate(department.name, complaint.complaintId, complaint.problem) // ✅ HTML Email
+//             complaintAssignedTemplate(
+//                 department.name, // Department name
+//                 complaint.complaintId, // Complaint ID
+//                 complaint.problem, // Problem
+//                 complaint.name, // Complainant name
+//                 complaint.mobileNo, // Complainant mobileNo
+//                 complaint.emailid, // Complainant emailid
+//                 complaint.address, // Complainant address
+//                 complaint.village, // Complainant village
+//                 complaint.taluka, // Complainant taluka
+//                 complaint.district // Complainant district
+//             ) // ✅ HTML Email
 //         );
 
 //         res.json({ message: "Complaint assigned and email sent to department", complaint });
@@ -309,28 +321,29 @@ exports.assignComplaintToDepartment = async (req, res) => {
 
         // ✅ Assign Complaint to Department
         complaint.assignedDepartment = new mongoose.Types.ObjectId(departmentId);
+        complaint.isAssigned = true; // ✅ Mark as Assigned
         await complaint.save();
 
         // ✅ Send Email Notification to Department
         await sendEmail(
-            department.emailid, // 📩 Department Email
+            department.emailid, 
             `New Complaint Assigned: ${complaint.complaintId}`,
             `A new complaint (ID: ${complaint.complaintId}) has been assigned to your department.`,
             complaintAssignedTemplate(
-                department.name, // Department name
-                complaint.complaintId, // Complaint ID
-                complaint.problem, // Problem
-                complaint.name, // Complainant name
-                complaint.mobileNo, // Complainant mobileNo
-                complaint.emailid, // Complainant emailid
-                complaint.address, // Complainant address
-                complaint.village, // Complainant village
-                complaint.taluka, // Complainant taluka
-                complaint.district // Complainant district
-            ) // ✅ HTML Email
+                department.name,
+                complaint.complaintId,
+                complaint.problem,
+                complaint.name,
+                complaint.mobileNo,
+                complaint.emailid,
+                complaint.address,
+                complaint.village,
+                complaint.taluka,
+                complaint.district
+            ) 
         );
 
-        res.json({ message: "Complaint assigned and email sent to department", complaint });
+        res.json({ message: "Complaint assigned successfully", complaint });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
