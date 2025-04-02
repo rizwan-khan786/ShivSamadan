@@ -434,29 +434,29 @@ exports.getUserComplaintCount = async (req, res) => {
 
 
 // ✅ Get Complaint Count for Admin Dashboard
-exports.getAdminComplaintCount = async (req, res) => {
-    try {
-        if (req.user.role !== "Admin") {
-            return res.status(403).json({ error: "Unauthorized: Admin access required" });
-        }
+// exports.getAdminComplaintCount = async (req, res) => {
+//     try {
+//         if (req.user.role !== "Admin") {
+//             return res.status(403).json({ error: "Unauthorized: Admin access required" });
+//         }
 
-        const statusCounts = await Complaint.aggregate([
-            { $group: { _id: "$status", count: { $sum: 1 } } }
-        ]);
+//         const statusCounts = await Complaint.aggregate([
+//             { $group: { _id: "$status", count: { $sum: 1 } } }
+//         ]);
 
-        const counts = {
-            totalComplaints: await Complaint.countDocuments(),
-            pending: statusCounts.find(s => s._id === "Pending")?.count || 0,
-            inProgress: statusCounts.find(s => s._id === "In Progress")?.count || 0,
-            rejected: statusCounts.find(s => s._id === "Rejected")?.count || 0,
-            completed: statusCounts.find(s => s._id === "Completed")?.count || 0
-        };
+//         const counts = {
+//             totalComplaints: await Complaint.countDocuments(),
+//             pending: statusCounts.find(s => s._id === "Pending")?.count || 0,
+//             inProgress: statusCounts.find(s => s._id === "In Progress")?.count || 0,
+//             rejected: statusCounts.find(s => s._id === "Rejected")?.count || 0,
+//             completed: statusCounts.find(s => s._id === "Completed")?.count || 0
+//         };
 
-        res.json(counts);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
+//         res.json(counts);
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// };
 
 // ✅ Get Complaint Count for Assigned Department
 exports.getDepartmentComplaintCount = async (req, res) => {
@@ -555,82 +555,82 @@ exports.getDepartmentComplaintCount = async (req, res) => {
 // };
 
 
-// exports.getAdminComplaintCount = async (req, res) => {
-//     try {
-//         if (req.user.role !== "Admin") {
-//             return res.status(403).json({ error: "Unauthorized: Admin access required" });
-//         }
+exports.getAdminComplaintCount = async (req, res) => {
+    try {
+        if (req.user.role !== "Admin") {
+            return res.status(403).json({ error: "Unauthorized: Admin access required" });
+        }
 
-//         // Get filter from query parameters
-//         const { filter, startDate, endDate, status } = req.query;
+        // Get filter from query parameters
+        const { filter, startDate, endDate, status } = req.query;
 
-//         let dateFilter = {};
-//         const currentDate = moment();
+        let dateFilter = {};
+        const currentDate = moment();
 
-//         // Apply date filters based on the selected filter type
-//         if (filter) {
-//             switch (filter) {
-//                 case "today":
-//                     dateFilter = { createdAt: { $gte: currentDate.startOf('day').toDate(), $lt: currentDate.endOf('day').toDate() } };
-//                     break;
-//                 case "yesterday":
-//                     dateFilter = { createdAt: { $gte: currentDate.subtract(1, 'days').startOf('day').toDate(), $lt: currentDate.subtract(1, 'days').endOf('day').toDate() } };
-//                     break;
-//                 case "week":
-//                     dateFilter = { createdAt: { $gte: currentDate.startOf('week').toDate(), $lt: currentDate.endOf('week').toDate() } };
-//                     break;
-//                 case "month":
-//                     dateFilter = { createdAt: { $gte: currentDate.startOf('month').toDate(), $lt: currentDate.endOf('month').toDate() } };
-//                     break;
-//                 case "year":
-//                     dateFilter = { createdAt: { $gte: currentDate.startOf('year').toDate(), $lt: currentDate.endOf('year').toDate() } };
-//                     break;
-//                 case "custom":
-//                     if (startDate && endDate) {
-//                         dateFilter = { createdAt: { $gte: new Date(startDate), $lt: new Date(endDate) } };
-//                     }
-//                     break;
-//                 default:
-//                     dateFilter = {}; // No filter if the filter is invalid
-//             }
-//         }
+        // Apply date filters based on the selected filter type
+        if (filter) {
+            switch (filter) {
+                case "today":
+                    dateFilter = { createdAt: { $gte: currentDate.startOf('day').toDate(), $lt: currentDate.endOf('day').toDate() } };
+                    break;
+                case "yesterday":
+                    dateFilter = { createdAt: { $gte: currentDate.subtract(1, 'days').startOf('day').toDate(), $lt: currentDate.subtract(1, 'days').endOf('day').toDate() } };
+                    break;
+                case "week":
+                    dateFilter = { createdAt: { $gte: currentDate.startOf('week').toDate(), $lt: currentDate.endOf('week').toDate() } };
+                    break;
+                case "month":
+                    dateFilter = { createdAt: { $gte: currentDate.startOf('month').toDate(), $lt: currentDate.endOf('month').toDate() } };
+                    break;
+                case "year":
+                    dateFilter = { createdAt: { $gte: currentDate.startOf('year').toDate(), $lt: currentDate.endOf('year').toDate() } };
+                    break;
+                case "custom":
+                    if (startDate && endDate) {
+                        dateFilter = { createdAt: { $gte: new Date(startDate), $lt: new Date(endDate) } };
+                    }
+                    break;
+                default:
+                    dateFilter = {}; // No filter if the filter is invalid
+            }
+        }
 
-//         // Aggregation to count complaints by status, with date filtering if applied
-//         const statusCounts = await Complaint.aggregate([
-//             { $match: { ...dateFilter } },  // Apply the date filter
-//             { $group: { _id: "$status", count: { $sum: 1 } } }
-//         ]);
+        // Aggregation to count complaints by status, with date filtering if applied
+        const statusCounts = await Complaint.aggregate([
+            { $match: { ...dateFilter } },  // Apply the date filter
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
 
-//         // If status filter is provided, apply it
-//         let filterStatus = {};
-//         if (status) {
-//             filterStatus = { status };
-//         }
+        // If status filter is provided, apply it
+        let filterStatus = {};
+        if (status) {
+            filterStatus = { status };
+        }
 
-//         // Prepare the count of complaints applying status filter and date filter
-//         const totalComplaints = await Complaint.countDocuments({ ...dateFilter, ...filterStatus });
+        // Prepare the count of complaints applying status filter and date filter
+        const totalComplaints = await Complaint.countDocuments({ ...dateFilter, ...filterStatus });
 
-//         // Fetch the count of users and departments
-//         const userCount = await User.countDocuments();
-//         const departmentCount = await User.countDocuments({ role: "Department" });
+        // Fetch the count of users and departments
+        const userCount = await User.countDocuments();
+        const departmentCount = await User.countDocuments({ role: "Department" });
 
-//         // Prepare the final counts with status filters applied
-//         const counts = {
-//             totalComplaints: totalComplaints || await Complaint.countDocuments(), // Default count if no filter applied
-//             pending: statusCounts.find(s => s._id === "Pending")?.count || 0,
-//             inProgress: statusCounts.find(s => s._id === "In Progress")?.count || 0,
-//             rejected: statusCounts.find(s => s._id === "Rejected")?.count || 0,
-//             completed: statusCounts.find(s => s._id === "Completed")?.count || 0,
-//             userCount,  // Total number of users
-//             departmentCount  // Total number of departments
-//         };
+        // Prepare the final counts with status filters applied
+        const counts = {
+            totalComplaints: totalComplaints || await Complaint.countDocuments(), // Default count if no filter applied
+            pending: statusCounts.find(s => s._id === "Pending")?.count || 0,
+            inProgress: statusCounts.find(s => s._id === "In Progress")?.count || 0,
+            rejected: statusCounts.find(s => s._id === "Rejected")?.count || 0,
+            completed: statusCounts.find(s => s._id === "Completed")?.count || 0,
+            userCount,  // Total number of users
+            departmentCount  // Total number of departments
+        };
 
-//         res.json(counts);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ error: err.message });
-//     }
-// };
+        res.json(counts);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+};
 
 
 // exports.getDepartmentComplaintCount = async (req, res) => {
